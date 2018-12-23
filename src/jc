@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ -z "$1" ]
+then
+	echo $(cat /etc/jf/record 2> /dev/null )
+else
+	echo "$(readlink -f ${1} )" > /etc/jf/record
+fi

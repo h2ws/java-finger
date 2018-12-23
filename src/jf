@@ -1,0 +1,71 @@
+#!/bin/bash
+
+#######################################################################
+# je [dirname] {javafilename}
+# je.sh - defualt: 寻找dirname，在找到的第一个目录下打开javafile, 
+# e.g
+# je dao AccountDao
+# 寻找dao文件夹，在dao中使用vim打开Account.java
+#
+# jf UserDao					仅寻找并打开  v
+# jf dao UserDao				到特定包下打开(可以是子包)，或创建再打开(必定包下)
+# jf com.oyyd.dao				仅创建多级目录 x
+# jf com.oyyd.dao UserDao		创建多级目录并创建文件并打开  x
+
+# Created by oyydd on 2018/12/3
+# Last Modified:
+# Mon Dec  3 13:00:57 CST 2018
+#
+########################################################################
+
+
+if [ -z "$1" -a -z "$2" ]
+then
+	echo not option
+	exit 1
+fi
+JF_WORK=$(cat /etc/jf/record 2> /dev/null )
+echo $JF_WORK
+if [ -z $2 ]
+then
+	if [ $(expr index $1  '.') -eq 0 ] 
+	then
+		selfile=$(find $JF_WORK -type f -name "${1}.java" | head -n 1)
+		if [ -z $selfile ]
+		then
+			echo ${1}.java file was not found
+			unset JF_WORK
+			exit 1
+		fi
+		vim $selfile
+	else
+		mkdir ${JF_WORK}/$(echo "$1" | sed 's/\./\//g') -p
+	fi
+else
+	seldir=$(find $JF_WORK -type d -name ${1} | head -n 1)
+	selfile="$seldir/${2}.java"
+	if [ -z $seldir ]
+	then
+		echo ${1} dir was not found
+		unset JF_WORK
+		exit 2
+	fi
+
+	if [ -e $selfile ]
+	then
+		if [ -f $selfile ]
+		then
+			vim $selfile
+		else
+			echo $selfile exists, but not a file.
+		fi
+	else
+		echo "public class $2" >> $selfile
+		echo "{"	>> $selfile
+		echo "	"	>> $selfile
+		echo "}"	>> $selfile
+		vim $selfile +3
+	fi
+	
+fi
+unset JF_WORK
